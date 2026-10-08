@@ -22,6 +22,8 @@ document.body.appendChild(renderer.domElement);
 
 await renderer.init();
 
+console.log('WebGPU backend:', renderer.backend.isWebGPUBackend);
+
 renderer.setAnimationLoop(() => {
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
