@@ -18,9 +18,10 @@ const starfield = wgslFn(fragmentSrc, [starLayer, rot]);
 export const uniforms = {
   iTime: uniform(0),                         // twinkle
   phase: uniform(0),                         // travel through the layers
-  spin: uniform(0),                          // extra rotation (black keys)
-  pulse: uniform(0),                         // flare strength (every key)
-  hue: uniform(new THREE.Vector2(0, 0)),     // colour (which key)
+  spin: uniform(0),                          // extra rotation (spin key)
+  pulse: uniform(0),                         // flare strength (colour keys)
+  tint: uniform(new THREE.Vector3(1, 1, 1)), // colour of the whole field (colour keys)
+  tintAmount: uniform(0),                    // 0 = original colours, 1 = fully tinted
   iMouse: uniform(new THREE.Vector2(0.5, 0.5)),
   iResolution: uniform(new THREE.Vector2(1.6, 1)), // same ratio as the screen plane
 };
@@ -33,7 +34,8 @@ export const createScreenMaterial = () => {
     phase: uniforms.phase,
     spin: uniforms.spin,
     pulse: uniforms.pulse,
-    hue: uniforms.hue,
+    tint: uniforms.tint,
+    tintAmount: uniforms.tintAmount,
     iMouse: uniforms.iMouse,
     iResolution: uniforms.iResolution,
   });

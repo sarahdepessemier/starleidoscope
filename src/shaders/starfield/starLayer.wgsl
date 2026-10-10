@@ -1,5 +1,5 @@
 // one layer of a grid of stars
-fn starLayer(uv: vec2f, iTime: f32, hue: vec2f, pulse: f32) -> vec3f {
+fn starLayer(uv: vec2f, iTime: f32, pulse: f32) -> vec3f {
   var col = vec3f(0.0);
 
   let gv = fract(uv) - 0.5;
@@ -17,8 +17,8 @@ fn starLayer(uv: vec2f, iTime: f32, hue: vec2f, pulse: f32) -> vec3f {
       let flare = smoothstep(0.8, 1.0, size) * 0.6 + pulse * size * 0.8;
       var s = star(gv - offs - p + 0.5, flare);
 
-      // the original read this from audio (iChannel0); now it comes from the keys
-      let hueShift = fract(n * 2345.2 + dot(uv / 420.0, hue) + hue.x) * vec3f(0.2, 0.3, 0.9) * 123.2;
+      // the original mixed in audio (iChannel0) here; without audio this is the plain palette
+      let hueShift = fract(n * 2345.2) * vec3f(0.2, 0.3, 0.9) * 123.2;
 
       var color = sin(hueShift) * 0.5 + 0.5;
       color = color * vec3f(1.0, 0.25, 1.0 + size);
