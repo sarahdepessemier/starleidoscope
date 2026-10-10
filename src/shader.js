@@ -19,9 +19,12 @@ export const uniforms = {
   iTime: uniform(0),                         // twinkle
   phase: uniform(0),                         // travel through the layers
   spin: uniform(0),                          // extra rotation (spin key)
-  pulse: uniform(0),                         // flare strength (colour keys)
-  tint: uniform(new THREE.Vector3(1, 1, 1)), // colour of the whole field (colour keys)
-  tintAmount: uniform(0),                    // 0 = original colours, 1 = fully tinted
+  pulse: uniform(0),                         // flare strength (flash on key press)
+  colourSeed: uniform(0),                    // which stars get a random colour, and which colour
+  colourChance: uniform(0),                  // share of stars recoloured (0 = none)
+  sizeSeed: uniform(0),                      // which stars get a random size, and which size
+  sizeChance: uniform(0),                    // share of stars resized (0 = none)
+  layoutSeed: uniform(0),                    // re-rolls the position of every star
   iMouse: uniform(new THREE.Vector2(0.5, 0.5)),
   iResolution: uniform(new THREE.Vector2(1.6, 1)), // same ratio as the screen plane
 };
@@ -34,8 +37,11 @@ export const createScreenMaterial = () => {
     phase: uniforms.phase,
     spin: uniforms.spin,
     pulse: uniforms.pulse,
-    tint: uniforms.tint,
-    tintAmount: uniforms.tintAmount,
+    colourSeed: uniforms.colourSeed,
+    colourChance: uniforms.colourChance,
+    sizeSeed: uniforms.sizeSeed,
+    sizeChance: uniforms.sizeChance,
+    layoutSeed: uniforms.layoutSeed,
     iMouse: uniforms.iMouse,
     iResolution: uniforms.iResolution,
   });

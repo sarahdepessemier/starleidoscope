@@ -1,6 +1,6 @@
 // https://www.shadertoy.com/view/ftt3R7  (kaleidoscope star field)
-// iMouse: 0..1, (0.5, 0.5) = centre. phase/spin/pulse/tint are driven by the keyboard.
-fn starfield(fragCoord: vec2f, iTime: f32, phase: f32, spin: f32, pulse: f32, tint: vec3f, tintAmount: f32, iMouse: vec2f, iResolution: vec2f) -> vec4f {
+// iMouse: 0..1, (0.5, 0.5) = centre. phase/spin/pulse and the seeds are driven by the keyboard.
+fn starfield(fragCoord: vec2f, iTime: f32, phase: f32, spin: f32, pulse: f32, colourSeed: f32, colourChance: f32, sizeSeed: f32, sizeChance: f32, layoutSeed: f32, iMouse: vec2f, iResolution: vec2f) -> vec4f {
   var uv = (fragCoord - 0.5 * iResolution) / iResolution.y;
   let m = (iMouse - vec2f(0.5)) * vec2f(iResolution.x / iResolution.y, 1.0);
   let t = phase * 0.01;
@@ -35,13 +35,8 @@ fn starfield(fragCoord: vec2f, iTime: f32, phase: f32, spin: f32, pulse: f32, ti
     let scale = mix(20.0, 0.5, depth);
     // GLSL had smoothstep(1., .9, depth)
     let fade = depth * (1.0 - smoothstep(0.9, 1.0, depth));
-    col += starLayer(uv * scale + i * 453.2, iTime, pulse) * fade;
+    col += starLayer(uv * scale + i * 453.2, iTime, pulse, colourSeed, colourChance, sizeSeed, sizeChance, layoutSeed) * fade;
   }
-
-  // colour keys: recolour the whole field (keeps the brightness, swaps the colour)
-  let lum = dot(col, vec3f(0.35, 0.45, 0.2));
-  let tinted = lum * tint * 2.2;
-  col = mix(col, tinted, tintAmount);
 
   return vec4f(col, 1.0);
 }

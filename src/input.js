@@ -2,18 +2,22 @@ import { uniforms } from './shader.js';
 
 // event.code = physical key, so it works on AZERTY and QWERTY
 const KEYS = [
-  { code: 'KeyS', label: 'S', name: 'paars', type: 'colour', tint: [0.75, 0.3, 1.0], css: '#a65cff' },
-  { code: 'KeyD', label: 'D', name: 'rood',  type: 'colour', tint: [1.0, 0.1, 0.15],  css: '#ff2a3a' },
-  { code: 'KeyF', label: 'F', name: 'roze',  type: 'colour', tint: [1.0, 0.35, 0.75], css: '#ff5cc0' },
-  { code: 'KeyG', label: 'G', name: 'blauw', type: 'colour', tint: [0.15, 0.5, 1.0],  css: '#2f8cff' },
-  { code: 'KeyJ', label: 'J', name: 'draai', type: 'spin',   css: '#e8e8f0' },
-  { code: 'KeyK', label: 'K', name: 'warp',  type: 'warp',   css: '#e8e8f0' },
+  { code: 'KeyS', label: 'S', name: 'kleur',   css: '#ffd84a' },
+  { code: 'KeyD', label: 'D', name: 'grootte', css: '#6cf0a8' },
+  { code: 'KeyF', label: 'F', name: 'nieuw',   css: '#ff7ad9' },
+  { code: 'KeyJ', label: 'J', name: 'draai',   css: '#e8e8f0' },
+  { code: 'KeyK', label: 'K', name: 'warp',    css: '#8ab4ff' },
 ];
 
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+// every visit starts with a different sky
 const state = {
-  pulse: 0, phase: 0, speed: 1,
-  spin: 0, spinVel: 0,
-  tint: [1, 1, 1], tintTarget: [1, 1, 1], tintAmount: 0, tintAmountTarget: 0,
+  pulse: 0, phase: rnd(0, 100), speed: 1,
+  spin: rnd(0, 6.28), spinVel: 0,
+  colourSeed: 0, colourChance: 0,
+  sizeSeed: 0, sizeChance: 0,
+  layoutSeed: rnd(0, 100),
 };
 const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
 const held = new Set();
@@ -39,19 +43,28 @@ const buildLegend = () => {
 
 // ---- input -----------------------------------------------------------
 const press = (code) => {
-  const key = KEYS.find((k) => k.code === code);
-  if (!key || held.has(code)) return;
+  if (!KEYS.some((k) => k.code === code) || held.has(code)) return;
   held.add(code);
   keyEls.get(code)?.classList.add('down');
 
-  if (key.type === 'colour') {
-    state.tintTarget = key.tint;
-    state.tintAmountTarget = 0.85;
-    state.pulse = 1;                 // big flare + new colour
-  } else if (key.type === 'spin') {
-    state.spinVel += 0.8;            // gentle rotation kick
+  if (code === 'KeyS') {                 // random stars get a random colour
+    state.colourSeed = rnd(0, 100);
+    state.colourChance = rnd(0.15, 0.5);
+    state.pulse = 1;
+  } else if (code === 'KeyD') {          // random stars get a random size
+    state.sizeSeed = rnd(0, 100);
+    state.sizeChance = rnd(0.15, 0.45);
+    state.pulse = 0.8;
+  } else if (code === 'KeyF') {          // brand-new sky: new positions, effects cleared
+    state.layoutSeed = rnd(0, 100);
+    state.colourChance = 0;
+    state.sizeChance = 0;
+    state.spin += rnd(0, 6.28);
+    state.pulse = 1;
+  } else if (code === 'KeyJ') {          // gentle rotation kick
+    state.spinVel += 0.8;
   }
-  // 'warp' works while held (see updateInput)
+  // 'KeyK' (warp) works while held, see updateInput
 };
 
 const release = (code) => {
@@ -72,8 +85,7 @@ export const initInput = () => {
 
 // ---- per frame: smooth the values and write the uniforms ---------------
 export const updateInput = (dt, time) => {
-  const colourHeld = KEYS.some((k) => k.type === 'colour' && held.has(k.code));
-  state.pulse = Math.max(colourHeld ? 0.3 : 0, state.pulse * Math.exp(-dt * 2.0));
+  state.pulse *= Math.exp(-dt * 2.0);
 
   const targetSpeed = held.has('KeyK') ? 5 : 1;       // hold warp = fly faster
   state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 3);
@@ -82,10 +94,6 @@ export const updateInput = (dt, time) => {
   state.spin += state.spinVel * dt;
   state.spinVel *= Math.exp(-dt * 1.0);
 
-  const f = Math.min(1, dt * 5);
-  for (let i = 0; i < 3; i++) state.tint[i] += (state.tintTarget[i] - state.tint[i]) * f;
-  state.tintAmount += (state.tintAmountTarget - state.tintAmount) * f;
-
   mouse.x += (mouse.tx - mouse.x) * Math.min(1, dt * 6);
   mouse.y += (mouse.ty - mouse.y) * Math.min(1, dt * 6);
 
@@ -93,7 +101,10 @@ export const updateInput = (dt, time) => {
   uniforms.phase.value = state.phase;
   uniforms.spin.value = state.spin;
   uniforms.pulse.value = state.pulse;
-  uniforms.tint.value.set(state.tint[0], state.tint[1], state.tint[2]);
-  uniforms.tintAmount.value = state.tintAmount;
+  uniforms.colourSeed.value = state.colourSeed;
+  uniforms.colourChance.value = state.colourChance;
+  uniforms.sizeSeed.value = state.sizeSeed;
+  uniforms.sizeChance.value = state.sizeChance;
+  uniforms.layoutSeed.value = state.layoutSeed;
   uniforms.iMouse.value.set(mouse.x, mouse.y);
 };
