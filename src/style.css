@@ -1,11 +1,15 @@
-html,
-body {
-  margin: 0;
-  height: 100%;
-  overflow: hidden;
-  background: #0b0b14;
-}
+html, body { margin: 0; height: 100%; overflow: hidden; background: #05050a; }
+canvas { display: block; }
 
-canvas {
-  display: block;
+.legend {
+  --w: 52px; --bw: 34px;
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  height: 120px; user-select: none; touch-action: none;
 }
+.key { font: 600 14px system-ui, sans-serif; border: 1px solid #222; cursor: pointer; padding: 0 0 8px; }
+.white { display: inline-block; width: var(--w); height: 120px; background: #f2f2f6; color: #333;
+  border-radius: 0 0 6px 6px; vertical-align: top; box-sizing: border-box; }
+.black { position: absolute; top: 0; width: var(--bw); height: 74px; background: #15151c; color: #ddd;
+  border-radius: 0 0 5px 5px; z-index: 1; }
+.white.down { background: #b9a7ff; }
+.black.down { background: #6a4dff; }
