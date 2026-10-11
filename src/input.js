@@ -21,6 +21,11 @@ const state = {
 };
 const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
 const held = new Set();
+const listeners = [];
+
+// other modules (the 3D scene) can react to key presses and read the current warp speed
+export const onKey = (fn) => listeners.push(fn);
+export const getSpeed = () => state.speed;
 const keyEls = new Map();
 
 // ---- legend (the on-screen keys) -------------------------------------
@@ -46,6 +51,7 @@ const press = (code) => {
   if (!KEYS.some((k) => k.code === code) || held.has(code)) return;
   held.add(code);
   keyEls.get(code)?.classList.add('down');
+  listeners.forEach((fn) => fn(code));
 
   if (code === 'KeyS') {                 // random stars get a random colour
     state.colourSeed = rnd(0, 100);

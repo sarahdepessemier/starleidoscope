@@ -1,18 +1,10 @@
 import * as THREE from 'three/webgpu';
-import { wgslFn, uniform, uv } from 'three/tsl';
+import { wgslFn, uniform, uv, vec2, colorSpaceToWorking } from 'three/tsl';
 
-import rotSrc from './shaders/starfield/rot.wgsl?raw';
-import hash21Src from './shaders/starfield/hash21.wgsl?raw';
-import starSrc from './shaders/starfield/star.wgsl?raw';
-import starLayerSrc from './shaders/starfield/starLayer.wgsl?raw';
 import fragmentSrc from './shaders/starfield/fragment.wgsl?raw';
 
-// helper functions first; the second argument lists the functions a function calls
-const rot = wgslFn(rotSrc);
-const hash21 = wgslFn(hash21Src);
-const star = wgslFn(starSrc, [rot]);
-const starLayer = wgslFn(starLayerSrc, [star, hash21]);
-const starfield = wgslFn(fragmentSrc, [starLayer, rot]);
+// the main function is the first function in the file, the helpers sit below it
+const starfield = wgslFn(fragmentSrc);
 
 // uniforms are TSL nodes: change their .value every frame
 export const uniforms = {
@@ -29,10 +21,15 @@ export const uniforms = {
   iResolution: uniform(new THREE.Vector2(1.6, 1)), // same ratio as the screen plane
 };
 
-export const createScreenMaterial = () => {
+// flipV: meshes exported from Blender (glTF) have their uv origin at the TOP-left, three's
+// PlaneGeometry at the bottom-left. If the shader shows upside down, toggle this.
+export const createScreenMaterial = ({ flipV = false } = {}) => {
   const material = new THREE.MeshBasicNodeMaterial();
-  material.colorNode = starfield({
-    fragCoord: uv().mul(uniforms.iResolution),
+  const screenUv = flipV ? vec2(uv().x, uv().y.oneMinus()) : uv();
+  // the shader outputs display-ready (sRGB) colours: tell three.js, so it converts them correctly
+  // and baked/lit materials in the same scene keep working
+  material.colorNode = colorSpaceToWorking(starfield({
+    fragCoord: screenUv.mul(uniforms.iResolution),
     iTime: uniforms.iTime,
     phase: uniforms.phase,
     spin: uniforms.spin,
@@ -44,6 +41,6 @@ export const createScreenMaterial = () => {
     layoutSeed: uniforms.layoutSeed,
     iMouse: uniforms.iMouse,
     iResolution: uniforms.iResolution,
-  });
+  }), THREE.SRGBColorSpace);
   return material;
 };
