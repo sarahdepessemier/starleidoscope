@@ -9,27 +9,30 @@ const starfield = wgslFn(fragmentSrc);
 // uniforms are TSL nodes: change their .value every frame
 export const uniforms = {
   iTime: uniform(0),                         // twinkle
-  phase: uniform(0),                         // travel through the layers
-  spin: uniform(0),                          // extra rotation (spin key)
+  phase: uniform(0),                         // travel through the layers (warp-driven time)
+  spin: uniform(0),                          // extra rotation (roll)
   pulse: uniform(0),                         // flare strength (flash on key press)
-  colourSeed: uniform(0),                    // which stars get a random colour, and which colour
-  colourChance: uniform(0),                  // share of stars recoloured (0 = none)
-  sizeSeed: uniform(0),                      // which stars get a random size, and which size
-  sizeChance: uniform(0),                    // share of stars resized (0 = none)
-  layoutSeed: uniform(0),                    // re-rolls the position of every star
+  colourSeed: uniform(0),
+  colourChance: uniform(0),
+  sizeSeed: uniform(0),
+  sizeChance: uniform(0),
+  layoutSeed: uniform(0),                    // re-rolls the sky
+  hue: uniform(0),                           // hue rotation (radians) for the planet shaders
+  zoom: uniform(1),                          // field of view zoom
   iMouse: uniform(new THREE.Vector2(0.5, 0.5)),
-  iResolution: uniform(new THREE.Vector2(1.6, 1)), // same ratio as the screen plane
+  iResolution: uniform(new THREE.Vector2(1.6, 1)),
 };
 
-// flipV: meshes exported from Blender (glTF) have their uv origin at the TOP-left, three's
-// PlaneGeometry at the bottom-left. If the shader shows upside down, toggle this.
-export const createScreenMaterial = ({ flipV = false } = {}) => {
+// meshes exported from Blender have a top-left uv origin; three's planes bottom-left
+export const screenUv = (flipV = false) => (flipV ? vec2(uv().x, uv().y.oneMinus()) : uv());
+
+export const createStarMaterial = ({ flipV = false, aspect = 1.6, interactive = true } = {}) => {
   const material = new THREE.MeshBasicNodeMaterial();
-  const screenUv = flipV ? vec2(uv().x, uv().y.oneMinus()) : uv();
-  // the shader outputs display-ready (sRGB) colours: tell three.js, so it converts them correctly
-  // and baked/lit materials in the same scene keep working
+  const resolution = uniform(new THREE.Vector2(aspect, 1));
+  const mouse = interactive ? uniforms.iMouse : uniform(new THREE.Vector2(0.5, 0.5));
+  // the shader outputs display-ready (sRGB) colours: tell three.js so it converts them correctly
   material.colorNode = colorSpaceToWorking(starfield({
-    fragCoord: screenUv.mul(uniforms.iResolution),
+    fragCoord: screenUv(flipV).mul(resolution),
     iTime: uniforms.iTime,
     phase: uniforms.phase,
     spin: uniforms.spin,
@@ -39,8 +42,11 @@ export const createScreenMaterial = ({ flipV = false } = {}) => {
     sizeSeed: uniforms.sizeSeed,
     sizeChance: uniforms.sizeChance,
     layoutSeed: uniforms.layoutSeed,
-    iMouse: uniforms.iMouse,
-    iResolution: uniforms.iResolution,
+    iMouse: mouse,
+    iResolution: resolution,
   }), THREE.SRGBColorSpace);
   return material;
 };
+
+// kept for the old name
+export const createScreenMaterial = createStarMaterial;

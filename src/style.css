@@ -16,3 +16,20 @@ canvas { display: block; }
 .key .letter { font-size: 22px; font-weight: 700; }
 .key .name { font-size: 11px; opacity: 0.85; }
 .key.down { background: var(--c); color: #05050a; transform: translateY(3px); }
+
+/* HUD */
+.hud {
+  position: fixed; top: 16px; left: 20px; color: #ffe9b0; font: 600 13px/1.5 "Courier New", monospace;
+  letter-spacing: 0.12em; text-shadow: 0 0 8px rgba(255, 190, 90, 0.5); pointer-events: none; user-select: none;
+}
+.hud .big { font-size: 18px; }
+.hud .dim { opacity: 0.6; }
+.hint {
+  position: fixed; top: 16px; right: 20px; color: #ffe9b0; font: 12px/1.5 "Courier New", monospace; opacity: 0.6;
+  text-align: right; pointer-events: none; user-select: none; letter-spacing: 0.08em;
+}
+#flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.32s ease-in; }
+#flash.on { opacity: 1; }
+#flash.out { transition: opacity 0.9s ease-out; }
+.key { width: 56px; height: 66px; }
+@media (max-width: 700px) { .key { width: 44px; height: 54px; } .key .name { font-size: 8px; } .legend { gap: 5px; } .hint { display: none; } }
