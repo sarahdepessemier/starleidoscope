@@ -9,6 +9,7 @@ Live: https://sarahdepessemier.github.io/starleidoscope/
 - **Mouse**: the point of view in the window follows the mouse (the camera also sways a little).
 - **Click the red TELEPORT button** (or press **T**): flash, warp, and a new destination in the window.
   The picture frame previews the next destination (it does not react to the mouse).
+- **Drag** the mug, pen, dice or clipboard: zero-gravity physics with Rapier (`@dimforge/rapier3d-compat`). Teleporting shakes everything loose.
 - **S** scan (new colours) · **D** zoom · **F** new sky · **J** roll · **K** hold for warp. The keys are also clickable on screen.
 
 ## Shadertoy shaders used
@@ -17,6 +18,7 @@ Live: https://sarahdepessemier.github.io/starleidoscope/
 | Kaleidoscope Rift | https://www.shadertoy.com/view/ftt3R7 | (original author, see Shadertoy) | see Shadertoy |
 | Aqua | https://www.shadertoy.com/view/Ds3XRl (Procedural Blue Planet) | Julien Sulpis | CC BY-NC-SA 3.0 |
 | Rubra | https://www.shadertoy.com/view/msdXzl (Procedural Red Planet) | Julien Sulpis | CC BY-NC-SA 3.0 |
+| Star Nest | https://www.shadertoy.com/view/XlfGRj | Pablo Roman Andrioli | MIT |
 | Neon Gate | TODO: add Shadertoy URL | TODO | CC BY-NC 4.0 |
 | The Vortex | TODO: add Shadertoy URL (tunnel, 2017) | Ethan Alexander Shulman | see Shadertoy |
 

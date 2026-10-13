@@ -32,6 +32,9 @@ const setLabel = (label, text) => {
   g.clearRect(0, 0, canvas.width, canvas.height);
   if (bg) { g.fillStyle = bg; g.fillRect(0, 0, canvas.width, canvas.height); }
   g.fillStyle = color; g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle';
+  // shrink the text until it fits
+  let px = Number(/(\d+)px/.exec(font)[1]);
+  while (g.measureText(text).width > canvas.width * 0.94 && px > 12) { px -= 2; g.font = font.replace(/\d+px/, px + 'px'); }
   g.fillText(text, canvas.width / 2, canvas.height / 2 + 3);
   tex.needsUpdate = true;
 };
@@ -226,6 +229,34 @@ export const createMug = () => {
   return g;
 };
 
+export const createPen = () => {
+  const g = new THREE.Group();   // axis = local Y, length 0.26
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.2, 12), mat(0x2a5db0, { roughness: 0.35 }));
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.014, 0.05, 12), mat(0xd9d4c4, { metalness: 0.6, roughness: 0.3 }));
+  tip.position.y = -0.125; tip.rotation.x = Math.PI;
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.05, 12), mat(0xf2f2f2, { roughness: 0.3 }));
+  cap.position.y = 0.125;
+  g.add(body, tip, cap);
+  g.userData = { halfLength: 0.13, radius: 0.017 };
+  return g;
+};
+
+export const createDice = () => {
+  const pip = (n) => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    x.fillStyle = '#fbf8ee'; x.fillRect(0, 0, 128, 128);
+    x.fillStyle = '#2b2f38';
+    const P = { 1: [[.5, .5]], 2: [[.25, .25], [.75, .75]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.25, .25], [.75, .25], [.25, .75], [.75, .75]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.25, .25], [.75, .25], [.25, .5], [.75, .5], [.25, .75], [.75, .75]] }[n];
+    P.forEach(([px, py]) => { x.beginPath(); x.arc(px * 128, py * 128, 11, 0, 7); x.fill(); });
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.4 });
+  };
+  const d = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.14), [1, 6, 2, 5, 3, 4].map(pip));
+  d.userData = { half: 0.07 };
+  return d;
+};
+
 export const createClipboard = () => {
   const g = new THREE.Group();
   const board = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.012, 0.36), mat(0x8a5a35, { roughness: 0.6 }));
@@ -268,9 +299,11 @@ export const createCockpit = () => {
   const mug = createMug();
   const clipboard = createClipboard();
   // placed on the console surface (console group coordinates)
-  mug.scale.setScalar(1.5); mug.position.set(2.15, 0.25 + 0.0575 * 1.5 + 0.02, 0.5);
-  clipboard.scale.setScalar(1.5); clipboard.position.set(-2.1, 0.25 + 0.02, 0.45); clipboard.rotation.y = 0.25;
-  consoleParts.group.add(mug, clipboard);
+  mug.scale.setScalar(1.8); mug.position.set(2.15, 0.27 + 0.0575 * 1.8 + 0.01, 0.5);
+  clipboard.scale.setScalar(1.8); clipboard.position.set(-2.1, 0.27 + 0.03, 0.45); clipboard.rotation.y = 0.25;
+  const pen = createPen(); pen.scale.setScalar(1.5); pen.position.set(1.2, 0.27 + 0.03, 0.7); pen.rotation.z = Math.PI / 2; pen.rotation.y = 0.5;
+  const dice = createDice(); dice.scale.setScalar(1.4); dice.position.set(-1.1, 0.27 + 0.1, 0.7); dice.rotation.set(0.3, 0.6, 0);
+  consoleParts.group.add(mug, clipboard, pen, dice);
 
   const update = (t, dt, mouse) => {
     // blinking buttons
@@ -303,7 +336,8 @@ export const createCockpit = () => {
 
   return {
     scene, camera, update,
-    windowDisc, frame, mug, clipboard,
+    windowDisc, frame, mug, clipboard, pen, dice,
+    props: [mug, clipboard, pen, dice],
     teleportMesh: consoleParts.cap,
     teleportGroup: consoleParts.tele,
     consoleGroup: consoleParts.group,

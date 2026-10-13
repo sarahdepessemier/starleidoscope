@@ -6,6 +6,7 @@ import bluePlanetSrc from './shaders/bluePlanet.wgsl?raw';
 import redPlanetSrc from './shaders/redPlanet.wgsl?raw';
 import neonGateSrc from './shaders/neonGate.wgsl?raw';
 import vortexSrc from './shaders/vortex.wgsl?raw';
+import starNestSrc from './shaders/starNest.wgsl?raw';
 
 // All planet / tunnel shaders share one signature:
 // (fragCoord, iTime, look, spin, pulse, seed, hue, zoom, iResolution) -> vec4f
@@ -36,4 +37,5 @@ export const DESTINATIONS = [
   { name: 'Rubra', tint: 0xff6a3a, make: generic(redPlanetSrc), hue: 0 },
   { name: 'Neon Gate', tint: 0xff40c0, make: generic(neonGateSrc, 700), hue: 0 },
   { name: 'The Vortex', tint: 0xaad4ff, make: generic(vortexSrc, 700), hue: 0 },
+  { name: 'Star Nest', tint: 0x9a7aff, make: generic(starNestSrc, 700), hue: 0 },
 ];

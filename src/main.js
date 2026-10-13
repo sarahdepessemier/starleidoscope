@@ -2,7 +2,8 @@ import * as THREE from 'three/webgpu';
 import './style.css';
 import { initInput, updateInput, onKey, getMouse, newSky, boostWarp, flashPulse } from './input.js';
 import { DESTINATIONS } from './destinations.js';
-import { createCockpit, WINDOW_R } from './cockpit.js';
+import { createCockpit } from './cockpit.js';
+import { createPhysics } from './physics.js';
 
 const params = new URLSearchParams(location.search);
 let current = Math.min(DESTINATIONS.length - 1, Math.max(0, Number(params.get('d') || 0)));
@@ -17,6 +18,7 @@ await renderer.init();
 
 const cockpit = createCockpit();
 const { scene, camera } = cockpit;
+const physics = await createPhysics(cockpit, scene, camera);
 
 // ---- destination materials: one for the window (reacts to the mouse), one for the frame (doesn't)
 const windowMats = DESTINATIONS.map((d) => d.make({ aspect: 1, interactive: true }));
@@ -36,7 +38,7 @@ hud.className = 'hud';
 document.body.appendChild(hud);
 const hint = document.createElement('div');
 hint.className = 'hint';
-hint.innerHTML = 'MOVE MOUSE = LOOK AROUND<br>CLICK THE RED BUTTON = TELEPORT';
+hint.innerHTML = 'MOVE MOUSE = LOOK AROUND<br>CLICK THE RED BUTTON = TELEPORT<br>DRAG THE MUG, PEN, DICE OR CLIPBOARD';
 document.body.appendChild(hint);
 const flash = document.createElement('div');
 flash.id = 'flash';
@@ -66,6 +68,7 @@ const teleport = () => {
   cockpit.pressTeleport();
   boostWarp(1.3);
   flashPulse(1);
+  physics.jolt(1);
   flash.classList.remove('out');
   flash.classList.add('on');
   setTimeout(() => {
@@ -92,11 +95,17 @@ const hitsButton = (e) => {
   return ray.intersectObject(t, true).length > 0;
 };
 renderer.domElement.addEventListener('pointermove', (e) => {
+  physics.dragMove(e);
   const hit = hitsButton(e);
   cockpit.setHover(hit);
-  renderer.domElement.style.cursor = hit ? 'pointer' : 'default';
+  renderer.domElement.style.cursor = physics.isDragging() ? 'grabbing' : hit ? 'pointer' : physics.hover(e) ? 'grab' : 'default';
 });
-renderer.domElement.addEventListener('pointerdown', (e) => { if (hitsButton(e)) teleport(); });
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (hitsButton(e)) teleport();
+  else if (physics.dragStart(e)) renderer.domElement.setPointerCapture(e.pointerId);
+});
+addEventListener('pointerup', () => physics.dragEnd());
+addEventListener('pointercancel', () => physics.dragEnd());
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -111,6 +120,7 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(timer.getDelta(), 0.1);
   const t = timer.getElapsed();
   updateInput(dt, t);
+  physics.step(dt);
   cockpit.update(t, dt, getMouse());
   renderer.render(scene, camera);
 });

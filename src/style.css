@@ -25,7 +25,7 @@ canvas { display: block; }
 .hud .big { font-size: 18px; }
 .hud .dim { opacity: 0.6; }
 .hint {
-  position: fixed; top: 16px; right: 20px; color: #ffe9b0; font: 12px/1.5 "Courier New", monospace; opacity: 0.6;
+  position: fixed; top: 12px; right: 16px; color: #ffe9b0; font: 10px/1.45 "Courier New", monospace; opacity: 0.6;
   text-align: right; pointer-events: none; user-select: none; letter-spacing: 0.08em;
 }
 #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.32s ease-in; }
