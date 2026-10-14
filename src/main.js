@@ -18,6 +18,19 @@ await renderer.init();
 
 const cockpit = createCockpit();
 const { scene, camera } = cockpit;
+// debug: ?solo=1&d=N renders one destination full-screen (for checking a shader)
+if (params.has('solo')) {
+  const { uniforms } = await import('./shader.js');
+  const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const sc = new THREE.Scene();
+  sc.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), DESTINATIONS[current].make({ aspect: innerWidth / innerHeight })));
+  uniforms.layoutSeed.value = Number(params.get('s') || 3);
+  uniforms.phase.value = Number(params.get('t') || 5);
+  uniforms.iMouse.value.set(Number(params.get('mx') || 0.5), Number(params.get('my') || 0.5));
+  renderer.setAnimationLoop(() => renderer.render(sc, ortho));
+  window.__ready = true;
+  await new Promise(() => {});
+}
 const physics = await createPhysics(cockpit, scene, camera);
 
 // ---- destination materials: one for the window (reacts to the mouse), one for the frame (doesn't)

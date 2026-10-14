@@ -15,12 +15,13 @@ Live: https://sarahdepessemier.github.io/starleidoscope/
 ## Shadertoy shaders used
 | Destination | Shader | Author | Licence |
 | --- | --- | --- | --- |
-| Kaleidoscope Rift | https://www.shadertoy.com/view/ftt3R7 | (original author, see Shadertoy) | see Shadertoy |
+| Kaleidoscope Rift | https://www.shadertoy.com/view/ftt3R7 | DanielXMoore | ... |
 | Aqua | https://www.shadertoy.com/view/Ds3XRl (Procedural Blue Planet) | Julien Sulpis | CC BY-NC-SA 3.0 |
 | Rubra | https://www.shadertoy.com/view/msdXzl (Procedural Red Planet) | Julien Sulpis | CC BY-NC-SA 3.0 |
-| Star Nest | https://www.shadertoy.com/view/XlfGRj | Pablo Roman Andrioli | MIT |
-| Neon Gate | TODO: add Shadertoy URL | TODO | CC BY-NC 4.0 |
-| The Vortex | TODO: add Shadertoy URL (tunnel, 2017) | Ethan Alexander Shulman | see Shadertoy |
+| Star Nest | https://www.shadertoy.com/view/XlfGRj | Kali | ... |
+| The Vortex | https://www.shadertoy.com/view/XdBBDz | public_int_i | ... |
+| Pegasus Galaxy | https://www.shadertoy.com/view/lty3Rt | Frank Hugenroth (frankenburgh) | ... |
+| Supernova Remnant | https://www.shadertoy.com/view/MdKXzc | Duke | CC BY-NC-SA 3.0 |
 
 All shaders were ported to WGSL (`src/shaders/`). Changes: noise textures replaced by procedural noise,
 mouse-controlled camera, shared controls (roll, flash, colour shift, zoom, seed). This is a non-commercial school project.

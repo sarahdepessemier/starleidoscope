@@ -13,8 +13,9 @@ fn starnest(fragCoord: vec2f, iTime: f32, look: vec2f, spin: f32, pulse: f32, se
   let time = iTime * SN_SPEED + 0.25;
 
   // mouse rotation (GLSL: vector * mat2, written out)
-  let a1 = 0.5 + look.x * 2.0;
-  let a2 = 0.8 + look.y * 2.0;
+  // the mouse only turns the view a little (the original swings through 2 radians: far too fast)
+  let a1 = 1.5 + (look.x - 0.5) * 0.45;
+  let a2 = 1.8 + (look.y - 0.5) * 0.45;
   let c1 = cos(a1); let s1 = sin(a1);
   let c2 = cos(a2); let s2 = sin(a2);
   dir = vec3f(dir.x * c1 + dir.z * s1, dir.y, -dir.x * s1 + dir.z * c1);
