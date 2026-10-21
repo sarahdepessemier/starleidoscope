@@ -36,10 +36,11 @@ fn starnest(fragCoord: vec2f, iTime: f32, look: vec2f, spin: f32, pulse: f32, se
     var pa = 0.0;
     var a = 0.0;
     for (var i = 0; i < SN_ITERATIONS; i++) {
-      p = abs(p) / max(dot(p, p), 1e-6) - SN_FORMUPARAM; // the magic formula
+      p = abs(p) / max(dot(p, p), 1e-4) - SN_FORMUPARAM; // the magic formula
       a += abs(length(p) - pa);                           // absolute sum of average change
       pa = length(p);
     }
+    a = min(a, 400.0);                                    // keeps a*a*a finite on every GPU
     let dm = max(0.0, SN_DARKMATTER - a * a * 0.001);     // dark matter
     a *= a * a;                                           // add contrast
     if (r > 6) { fade *= 1.0 - dm; }                      // dark matter, don't render near
@@ -49,7 +50,7 @@ fn starnest(fragCoord: vec2f, iTime: f32, look: vec2f, spin: f32, pulse: f32, se
     s += SN_STEPSIZE;
   }
   v = mix(vec3f(length(v)), v, SN_SATURATION);            // colour adjust
-  var color = v * 0.016;
+  var color = clamp(v * 0.016, vec3f(0.0), vec3f(4.0));
   color = sn_hueRotate(color, hue) * (1.0 + pulse * 0.8);
   return vec4f(color, 1.0);
 }

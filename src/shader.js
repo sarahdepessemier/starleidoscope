@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { wgslFn, uniform, uv, vec2, colorSpaceToWorking } from 'three/tsl';
+import { wgslFn, uniform, uv, vec2, vec4, colorSpaceToWorking } from 'three/tsl';
 
 import fragmentSrc from './shaders/starfield/fragment.wgsl?raw';
 
@@ -29,7 +29,7 @@ export const uniforms = {
 // meshes exported from Blender have a top-left uv origin; three's planes bottom-left
 export const screenUv = (flipV = false) => (flipV ? vec2(uv().x, uv().y.oneMinus()) : uv());
 
-export const createStarMaterial = ({ flipV = false, aspect = 1.6, interactive = true } = {}) => {
+export const createStarMaterial = ({ flipV = false, aspect = 1.6, interactive = true, limit = null } = {}) => {
   const material = new THREE.MeshBasicNodeMaterial();
   const resolution = uniform(new THREE.Vector2(aspect, 1));
   const mouse = interactive ? uniforms.iMouse : uniform(new THREE.Vector2(0.5, 0.5));
@@ -39,7 +39,7 @@ export const createStarMaterial = ({ flipV = false, aspect = 1.6, interactive = 
     ? { phase: uniforms.phase, spin: uniforms.spin, pulse: uniforms.pulse, cs: uniforms.colourSeed, cc: uniforms.colourChance, ss: uniforms.sizeSeed, sc: uniforms.sizeChance, seed: uniforms.layoutSeed }
     : { phase: uniforms.previewTime, spin: z(), pulse: z(), cs: z(), cc: z(), ss: z(), sc: z(), seed: uniforms.previewSeed };
   // the shader outputs display-ready (sRGB) colours: tell three.js so it converts them correctly
-  material.colorNode = colorSpaceToWorking(starfield({
+  const raw = starfield({
     fragCoord: screenUv(flipV).mul(resolution),
     iTime: uniforms.iTime,
     phase: p.phase,
@@ -52,7 +52,10 @@ export const createStarMaterial = ({ flipV = false, aspect = 1.6, interactive = 
     layoutSeed: p.seed,
     iMouse: mouse,
     iResolution: resolution,
-  }), THREE.SRGBColorSpace);
+  });
+  // limit: keeps sparkly shaders below the bloom threshold, so tiny bright stars don't flicker
+  const out = limit ? vec4(raw.rgb.min(limit), 1.0) : raw;
+  material.colorNode = colorSpaceToWorking(out, THREE.SRGBColorSpace);
   return material;
 };
 

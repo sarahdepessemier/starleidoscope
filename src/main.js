@@ -4,7 +4,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import './style.css';
 import { uniforms } from './shader.js';
 import { initInput, updateInput, onKey, getMouse, adoptPreview, boostWarp, flashPulse } from './input.js';
-import { DESTINATIONS } from './destinations.js';
+import { DESTINATIONS, isTouch } from './destinations.js';
 import { createCockpit, makeLabel } from './cockpit.js';
 import { createControls } from './controls.js';
 import { createPhysics } from './physics.js';
@@ -15,7 +15,7 @@ const nextOf = (i) => (i + 1) % DESTINATIONS.length;
 
 // ---- renderer ---------------------------------------------------------------
 const renderer = new THREE.WebGPURenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.setPixelRatio(isTouch ? 1 : Math.min(devicePixelRatio, 1.5));   // lighter on phones and tablets
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 await renderer.init();
@@ -27,7 +27,7 @@ const { scene, camera } = cockpit;
 // button) get a soft glow. Add ?bloom=0 to the url to turn it off.
 let renderPipeline = null;
 let bloomPass = null;
-if (params.get('bloom') !== '0') {
+if (params.get('bloom') !== '0' && !isTouch) {   // bloom is skipped on touch devices (heavy, and it showed glitches)
   try {
     const scenePass = pass(scene, camera);
     const sceneColor = scenePass.getTextureNode('output');
