@@ -22,7 +22,7 @@ export const createPhysics = async (cockpit, scene, camera) => {
   fixed(8, 0.5, 6, { x: 0, y: -2.5, z: 3 });      // floor
   fixed(0.5, 5, 6, { x: -3.75, y: 0, z: 3 });     // left
   fixed(0.5, 5, 6, { x: 3.75, y: 0, z: 3 });      // right
-  fixed(8, 5, 0.5, { x: 0, y: 0, z: 4.7 });       // back (in front of the camera)
+  fixed(8, 5, 0.5, { x: 0, y: 0, z: 3.7 });       // back wall (keeps things away from the camera)
 
   // ---- dynamic props ---------------------------------------------------------------------
   const bodies = [];
@@ -93,6 +93,26 @@ export const createPhysics = async (cockpit, scene, camera) => {
     });
   };
 
+  // Soft "leash": the room is much wider than what the camera sees, so box walls alone let objects float
+  // out of sight. Whatever drifts towards the edge of the screen is pulled back inside the view.
+  const v3 = new THREE.Vector3(); const target = new THREE.Vector3();
+  const LIM_X = 0.7, LIM_TOP = 0.6, LIM_BOTTOM = -0.68;
+  const keepInView = (dt) => {
+    camera.updateMatrixWorld();
+    for (const { obj, body } of bodies) {
+      if (drag && drag.prop.body === body) continue;
+      const t = body.translation();
+      v3.set(t.x, t.y, t.z).project(camera);
+      const cx = Math.min(LIM_X, Math.max(-LIM_X, v3.x));
+      const cy = Math.min(LIM_TOP, Math.max(LIM_BOTTOM, v3.y));
+      if (cx === v3.x && cy === v3.y && v3.z < 1) continue;
+      target.set(cx, cy, Math.min(v3.z, 0.995)).unproject(camera);
+      const l = body.linvel();
+      const k = Math.min(1, dt * 6);
+      body.setLinvel({ x: l.x * (1 - 0.15 * k) + (target.x - t.x) * 4 * k, y: l.y * (1 - 0.15 * k) + (target.y - t.y) * 4 * k, z: l.z * (1 - 0.15 * k) + (target.z - t.z) * 4 * k }, true);
+    }
+  };
+
   let acc = 0;
   const step = (dt) => {
     if (drag?.target) {
@@ -104,6 +124,7 @@ export const createPhysics = async (cockpit, scene, camera) => {
     }
     acc += Math.min(dt, 0.05);
     while (acc >= 1 / 60) { world.step(); acc -= 1 / 60; }
+    keepInView(dt);
     for (const { obj, body } of bodies) {
       const t = body.translation(); const r = body.rotation();
       obj.position.set(t.x, t.y, t.z);

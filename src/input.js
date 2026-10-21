@@ -20,7 +20,8 @@ const state = {
   sizeSeed: 0, sizeChance: 0,
   layoutSeed: rnd(0, 100),
   hue: 0, hueTarget: 0, zoom: 1, zoomTarget: 1, zoomStep: 0,
-  boost: 0,
+  boost: 0, rollInput: 0,
+  nextSeed: rnd(0, 100), previewPhase: rnd(0, 100),
 };
 const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
 const held = new Set();
@@ -38,34 +39,29 @@ export const newSky = () => {
   state.hueTarget = state.hue = 0;
   state.spin += rnd(0, 6.28);
 };
+// teleport: the window adopts exactly the sky the picture frame was showing, and the frame rolls a new one
+export const adoptPreview = () => {
+  state.layoutSeed = state.nextSeed;
+  state.nextSeed = rnd(0, 100);
+  state.colourChance = 0;
+  state.sizeChance = 0;
+  state.hueTarget = state.hue = 0;
+  state.zoomTarget = 1; state.zoomStep = 0;
+  state.spin += rnd(0, 6.28);
+};
+// used by the 3D controls
+export const pressKey = (code) => press(code);
+export const releaseKey = (code) => release(code);
+export const setZoom = (v) => { state.zoomTarget = Math.min(1.8, Math.max(0.7, v)); };
+export const getZoomTarget = () => state.zoomTarget;
+export const setRollInput = (v) => { state.rollInput = v; };
 export const flashPulse = (v = 1) => { state.pulse = Math.max(state.pulse, v); };
 // fly fast for a moment (during the teleport)
 export const boostWarp = (seconds) => { state.boost = seconds; };
-const keyEls = new Map();
-
-// ---- legend (the on-screen keys) -------------------------------------
-const buildLegend = () => {
-  const legend = document.createElement('div');
-  legend.className = 'legend';
-  for (const k of KEYS) {
-    const el = document.createElement('button');
-    el.className = 'key';
-    el.style.setProperty('--c', k.css);
-    el.innerHTML = `<span class="letter">${k.label}</span><span class="name">${k.name}</span>`;
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); press(k.code); });
-    el.addEventListener('pointerup', () => release(k.code));
-    el.addEventListener('pointerleave', () => release(k.code));
-    legend.appendChild(el);
-    keyEls.set(k.code, el);
-  }
-  document.body.appendChild(legend);
-};
-
 // ---- input -----------------------------------------------------------
 const press = (code) => {
   if (!KEYS.some((k) => k.code === code) || held.has(code)) return;
   held.add(code);
-  keyEls.get(code)?.classList.add('down');
   listeners.forEach((fn) => fn(code));
 
   if (code === 'KeyS') {                 // scan: random star colours + a new colour tint on the planets
@@ -90,11 +86,9 @@ const press = (code) => {
 
 const release = (code) => {
   held.delete(code);
-  keyEls.get(code)?.classList.remove('down');
 };
 
 export const initInput = () => {
-  buildLegend();
   window.addEventListener('keydown', (e) => { if (!e.repeat) press(e.code); });
   window.addEventListener('keyup', (e) => release(e.code));
   window.addEventListener('blur', () => [...held].forEach(release));
@@ -113,7 +107,7 @@ export const updateInput = (dt, time) => {
   state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 3);
   state.phase += dt * state.speed;
 
-  state.spin += state.spinVel * dt;
+  state.spin += (state.spinVel + state.rollInput * 1.6) * dt;
   state.spinVel *= Math.exp(-dt * 1.0);
 
   state.hue += (state.hueTarget - state.hue) * Math.min(1, dt * 2.5);
@@ -131,6 +125,9 @@ export const updateInput = (dt, time) => {
   uniforms.sizeSeed.value = state.sizeSeed;
   uniforms.sizeChance.value = state.sizeChance;
   uniforms.layoutSeed.value = state.layoutSeed;
+  state.previewPhase += dt;
+  uniforms.previewTime.value = state.previewPhase;
+  uniforms.previewSeed.value = state.nextSeed;
   uniforms.hue.value = state.hue;
   uniforms.zoom.value = state.zoom;
   uniforms.iMouse.value.set(mouse.x, mouse.y);

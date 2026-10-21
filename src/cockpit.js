@@ -12,7 +12,7 @@ export const WINDOW_POS = new THREE.Vector3(0, 0.8, 0);
 
 const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0.05, ...o });
 
-const makeLabel = (text, { w = 1, h = 0.25, font = 'bold 64px "Courier New", monospace', color = '#2b2f38', bg = null } = {}) => {
+export const makeLabel = (text, { w = 1, h = 0.25, font = 'bold 64px "Courier New", monospace', color = '#2b2f38', bg = null } = {}) => {
   const c = document.createElement('canvas');
   c.width = 512; c.height = Math.round(512 * (h / w));
   const g = c.getContext('2d');
@@ -139,7 +139,7 @@ const buildConsole = (scene) => {
   const base = []; const blink = [];
   let n = 0;
   for (const side of [-1, 1]) {
-    for (let r = 0; r < 10; r++) {
+    for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 19; c++) {
         if (n >= 800) break;
         const x = side * (0.82 + c * 0.14 + (r % 2) * 0.04);
@@ -166,11 +166,6 @@ const buildConsole = (scene) => {
     const tick = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.11), mat(0xff5a4a));
     tick.position.set(x, top + 0.075, z - 0.03); tick.rotation.y = x * 2; g.add(tick);
   }
-  for (let i = 0; i < 5; i++) {
-    const sw = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.05), mat(0xd9d4c4, { metalness: 0.5 }));
-    sw.position.set(-0.4 + i * 0.2, top + 0.05, 0.62); sw.rotation.x = (i % 2 ? 0.5 : -0.5); g.add(sw);
-  }
-
   // the big TELEPORT button
   const tele = new THREE.Group();
   tele.position.set(0, top, -0.05);
@@ -273,9 +268,9 @@ export const createCockpit = () => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x15161b);
 
-  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 50);
-  const camBase = new THREE.Vector3(0, 0.55, 6.6);
-  const camTarget = new THREE.Vector3(0, -0.2, 0);
+  const camera = new THREE.PerspectiveCamera(49, innerWidth / innerHeight, 0.1, 50);
+  const camBase = new THREE.Vector3(0, 0.3, 6.8);
+  const camTarget = new THREE.Vector3(0, -0.35, 0);
   camera.position.copy(camBase);
 
   scene.add(new THREE.HemisphereLight(0xfff1d6, 0x30323c, 0.55));
@@ -299,10 +294,10 @@ export const createCockpit = () => {
   const mug = createMug();
   const clipboard = createClipboard();
   // placed on the console surface (console group coordinates)
-  mug.scale.setScalar(1.8); mug.position.set(2.15, 0.27 + 0.0575 * 1.8 + 0.01, 0.5);
-  clipboard.scale.setScalar(1.8); clipboard.position.set(-2.1, 0.27 + 0.03, 0.45); clipboard.rotation.y = 0.25;
-  const pen = createPen(); pen.scale.setScalar(1.5); pen.position.set(1.2, 0.27 + 0.03, 0.7); pen.rotation.z = Math.PI / 2; pen.rotation.y = 0.5;
-  const dice = createDice(); dice.scale.setScalar(1.4); dice.position.set(-1.1, 0.27 + 0.1, 0.7); dice.rotation.set(0.3, 0.6, 0);
+  mug.scale.setScalar(1.8); mug.position.set(2.3, 0.27 + 0.0575 * 1.8 + 0.01, -0.15);
+  clipboard.scale.setScalar(1.8); clipboard.position.set(-2.3, 0.27 + 0.03, -0.1); clipboard.rotation.y = 0.25;
+  const pen = createPen(); pen.scale.setScalar(1.5); pen.position.set(1.4, 0.27 + 0.03, 0.1); pen.rotation.z = Math.PI / 2; pen.rotation.y = 0.5;
+  const dice = createDice(); dice.scale.setScalar(1.4); dice.position.set(-1.4, 0.27 + 0.1, 0.05); dice.rotation.set(0.3, 0.6, 0);
   consoleParts.group.add(mug, clipboard, pen, dice);
 
   const update = (t, dt, mouse) => {

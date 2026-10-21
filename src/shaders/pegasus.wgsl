@@ -1,6 +1,6 @@
 // Galaxy shader ("Pegasus Galaxy") by Frank Hugenroth (frankenburgh), 07/2015
 // Released at nordlicht/bremen 2015
-// Shadertoy URL: https://www.shadertoy.com/view/MdXSzS (check this link against your own)
+// https://www.shadertoy.com/view/lty3Rt
 // Ported to WGSL. Changes: the 150-second intro/outro fade is removed so it can run forever,
 // the mouse (look) moves the camera around the galaxy, and shared controls were added
 // (spin = roll, pulse = flash, seed = other region of the clouds, hue = colour shift, zoom).

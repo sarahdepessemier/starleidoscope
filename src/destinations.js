@@ -17,15 +17,19 @@ const generic = (src, virtualHeight = 800) => {
     const resolution = uniform(new THREE.Vector2(aspect * virtualHeight, virtualHeight));
     const look = interactive ? uniforms.iMouse : uniform(new THREE.Vector2(0.5, 0.5));
     const material = new THREE.MeshBasicNodeMaterial();
+    // window: driven by the controls. picture frame: calm preview (own time + seed, no colour/zoom/roll)
+    const c = interactive
+      ? { time: uniforms.phase, spin: uniforms.spin, pulse: uniforms.pulse, seed: uniforms.layoutSeed, hue: uniforms.hue, zoom: uniforms.zoom }
+      : { time: uniforms.previewTime, spin: uniform(0), pulse: uniform(0), seed: uniforms.previewSeed, hue: uniform(0), zoom: uniform(1) };
     material.colorNode = colorSpaceToWorking(fn({
       fragCoord: screenUv(flipV).mul(resolution),
-      iTime: uniforms.phase,
+      iTime: c.time,
       look,
-      spin: uniforms.spin,
-      pulse: uniforms.pulse,
-      seed: uniforms.layoutSeed,
-      hue: uniforms.hue,
-      zoom: uniforms.zoom,
+      spin: c.spin,
+      pulse: c.pulse,
+      seed: c.seed,
+      hue: c.hue,
+      zoom: c.zoom,
       iResolution: resolution,
     }), THREE.SRGBColorSpace);
     return material;

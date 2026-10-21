@@ -1,5 +1,5 @@
 // Tunnel by Ethan Alexander Shulman, 2017
-// Shadertoy URL: TODO (add the original link here and in the README)
+// https://www.shadertoy.com/view/XdBBDz (Shadertoy user: public_int_i)
 // Ported to WGSL from the MSAA version (16 samples instead of 64). Changes: the mouse moves the
 // tunnel (look), and shared controls were added (spin = roll, pulse = flash, seed = colour phase,
 // hue = colour shift, zoom).

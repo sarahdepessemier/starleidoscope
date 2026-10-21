@@ -1,4 +1,4 @@
-// Star Nest by Pablo Roman Andrioli
+// Star Nest by Pablo Roman Andrioli (Shadertoy user: Kali)
 // https://www.shadertoy.com/view/XlfGRj
 // License: MIT
 // Ported to WGSL. Changes: the mouse (look) turns the view like the original, and shared controls
@@ -12,14 +12,16 @@ fn starnest(fragCoord: vec2f, iTime: f32, look: vec2f, spin: f32, pulse: f32, se
   var dir = vec3f(uv * SN_ZOOM / zoom, 1.0);
   let time = iTime * SN_SPEED + 0.25;
 
-  // mouse rotation (GLSL: vector * mat2, written out)
-  // the mouse only turns the view a little (the original swings through 2 radians: far too fast)
-  let a1 = 1.5 + (look.x - 0.5) * 0.45;
-  let a2 = 1.8 + (look.y - 0.5) * 0.45;
-  let c1 = cos(a1); let s1 = sin(a1);
-  let c2 = cos(a2); let s2 = sin(a2);
+  // fixed base rotation (as in the original with the mouse in the middle) ...
+  let c1 = cos(1.5); let s1 = sin(1.5);
+  let c2 = cos(1.8); let s2 = sin(1.8);
   dir = vec3f(dir.x * c1 + dir.z * s1, dir.y, -dir.x * s1 + dir.z * c1);
   dir = vec3f(dir.x * c2 + dir.y * s2, -dir.x * s2 + dir.y * c2, dir.z);
+  // ... the mouse only tilts the viewing direction a little. In the original the mouse also rotated the
+  // camera position through the fractal, which made the picture race past.
+  let m1 = (look.x - 0.5) * 0.35; let m2 = (look.y - 0.5) * 0.35;
+  dir = vec3f(dir.x * cos(m1) + dir.z * sin(m1), dir.y, -dir.x * sin(m1) + dir.z * cos(m1));
+  dir = vec3f(dir.x * cos(m2) + dir.y * sin(m2), -dir.x * sin(m2) + dir.y * cos(m2), dir.z);
   var origin = vec3f(1.0, 0.5, 0.5) + vec3f(time * 2.0, time, -2.0) + vec3f(seed * 0.173, seed * 0.091, 0.0);
   origin = vec3f(origin.x * c1 + origin.z * s1, origin.y, -origin.x * s1 + origin.z * c1);
   origin = vec3f(origin.x * c2 + origin.y * s2, -origin.x * s2 + origin.y * c2, origin.z);

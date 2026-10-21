@@ -1,4 +1,4 @@
-// Shadertoy: https://www.shadertoy.com/view/ftt3R7  (kaleidoscope star field)
+// Shadertoy: https://www.shadertoy.com/view/ftt3R7  (kaleidoscope star field, by DanielXMoore)
 // wgslFn reads the signature of the FIRST function in this file, so the main function
 // comes first and the helper functions follow below it.
 fn starfield(fragCoord: vec2f, iTime: f32, phase: f32, spin: f32, pulse: f32, colourSeed: f32, colourChance: f32, sizeSeed: f32, sizeChance: f32, layoutSeed: f32, iMouse: vec2f, iResolution: vec2f) -> vec4f {

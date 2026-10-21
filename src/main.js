@@ -1,8 +1,9 @@
 import * as THREE from 'three/webgpu';
 import './style.css';
-import { initInput, updateInput, onKey, getMouse, newSky, boostWarp, flashPulse } from './input.js';
+import { initInput, updateInput, onKey, getMouse, adoptPreview, boostWarp, flashPulse } from './input.js';
 import { DESTINATIONS } from './destinations.js';
-import { createCockpit } from './cockpit.js';
+import { createCockpit, makeLabel } from './cockpit.js';
+import { createControls } from './controls.js';
 import { createPhysics } from './physics.js';
 
 const params = new URLSearchParams(location.search);
@@ -32,6 +33,7 @@ if (params.has('solo')) {
   await new Promise(() => {});
 }
 const physics = await createPhysics(cockpit, scene, camera);
+const controls = createControls({ consoleGroup: cockpit.consoleGroup, camera, makeLabel });
 
 // ---- destination materials: one for the window (reacts to the mouse), one for the frame (doesn't)
 const windowMats = DESTINATIONS.map((d) => d.make({ aspect: 1, interactive: true }));
@@ -49,10 +51,28 @@ const frameMats = DESTINATIONS.map((d) => d.make({ aspect: cockpit.frame.aspect,
 const hud = document.createElement('div');
 hud.className = 'hud';
 document.body.appendChild(hud);
-const hint = document.createElement('div');
-hint.className = 'hint';
-hint.innerHTML = 'MOVE MOUSE = LOOK AROUND<br>CLICK THE RED BUTTON = TELEPORT<br>DRAG THE MUG, PEN, DICE OR CLIPBOARD';
-document.body.appendChild(hint);
+// help panel: open at the start, then folds away into a small "? HELP" button
+const help = document.createElement('div');
+help.className = 'help open';
+help.innerHTML = `
+  <button class="helpbtn" aria-label="Show or hide the instructions">? HELP</button>
+  <div class="helpbody">
+    <b>HOW TO FLY</b>
+    <div><span>MOUSE</span> look around: the window follows your pointer</div>
+    <div><span>RED BUTTON <i>T</i></span> teleport to the next destination (the frame shows it)</div>
+    <div class="sub">Control panel, all of it only changes the window:</div>
+    <div><span>KNOB <i>S</i></span> scan: click to shift the colours</div>
+    <div><span>SLIDER <i>D</i></span> drag to zoom in and out</div>
+    <div><span>TOGGLE <i>F</i></span> flip for a brand-new sky</div>
+    <div><span>JOYSTICK <i>J</i></span> drag sideways to roll the view</div>
+    <div><span>LEVER <i>K</i></span> hold it pulled back to warp</div>
+    <div class="sub">Loose objects float in zero gravity:</div>
+    <div><span>DRAG</span> grab and throw the mug, pen, dice or clipboard</div>
+  </div>`;
+document.body.appendChild(help);
+const helpBtn = help.querySelector('.helpbtn');
+helpBtn.addEventListener('click', () => { help.classList.toggle('open'); clearTimeout(helpTimer); });
+const helpTimer = setTimeout(() => help.classList.remove('open'), 22000);
 const flash = document.createElement('div');
 flash.id = 'flash';
 document.body.appendChild(flash);
@@ -87,7 +107,7 @@ const teleport = () => {
   setTimeout(() => {
     current = nextOf(current);
     sector = Math.floor(Math.random() * 9000) + 1000;
-    newSky();
+    adoptPreview();
     apply();
     flash.classList.add('out');
     flash.classList.remove('on');
@@ -107,18 +127,24 @@ const hitsButton = (e) => {
   const t = cockpit.teleportGroup;
   return ray.intersectObject(t, true).length > 0;
 };
+renderer.domElement.style.touchAction = 'none';
 renderer.domElement.addEventListener('pointermove', (e) => {
+  controls.pointerMove(e);
   physics.dragMove(e);
   const hit = hitsButton(e);
   cockpit.setHover(hit);
-  renderer.domElement.style.cursor = physics.isDragging() ? 'grabbing' : hit ? 'pointer' : physics.hover(e) ? 'grab' : 'default';
+  const onControl = controls.hover(e);
+  renderer.domElement.style.cursor = (physics.isDragging() || controls.isActive()) ? 'grabbing'
+    : (hit || onControl) ? 'pointer' : physics.hover(e) ? 'grab' : 'default';
 });
 renderer.domElement.addEventListener('pointerdown', (e) => {
   if (hitsButton(e)) teleport();
+  else if (controls.pointerDown(e)) renderer.domElement.setPointerCapture(e.pointerId);
   else if (physics.dragStart(e)) renderer.domElement.setPointerCapture(e.pointerId);
 });
-addEventListener('pointerup', () => physics.dragEnd());
-addEventListener('pointercancel', () => physics.dragEnd());
+const release = () => { physics.dragEnd(); controls.pointerUp(); };
+addEventListener('pointerup', release);
+addEventListener('pointercancel', release);
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -133,6 +159,7 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(timer.getDelta(), 0.1);
   const t = timer.getElapsed();
   updateInput(dt, t);
+  controls.update(dt, t);
   physics.step(dt);
   cockpit.update(t, dt, getMouse());
   renderer.render(scene, camera);
