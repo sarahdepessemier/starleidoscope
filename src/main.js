@@ -1,5 +1,8 @@
 import * as THREE from 'three/webgpu';
+import { pass } from 'three/tsl';
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import './style.css';
+import { uniforms } from './shader.js';
 import { initInput, updateInput, onKey, getMouse, adoptPreview, boostWarp, flashPulse } from './input.js';
 import { DESTINATIONS } from './destinations.js';
 import { createCockpit, makeLabel } from './cockpit.js';
@@ -19,6 +22,20 @@ await renderer.init();
 
 const cockpit = createCockpit();
 const { scene, camera } = cockpit;
+
+// ---- post-processing: bloom (TSL RenderPipeline). Bright things (LEDs, the glowing window, the red
+// button) get a soft glow. Add ?bloom=0 to the url to turn it off.
+let renderPipeline = null;
+let bloomPass = null;
+if (params.get('bloom') !== '0') {
+  try {
+    const scenePass = pass(scene, camera);
+    const sceneColor = scenePass.getTextureNode('output');
+    bloomPass = bloom(sceneColor, 0.4, 0.5, 0.8);        // strength, radius, threshold
+    renderPipeline = new THREE.RenderPipeline(renderer);
+    renderPipeline.outputNode = sceneColor.add(bloomPass);
+  } catch (e) { console.warn('bloom not available, rendering without it', e); renderPipeline = null; }
+}
 // debug: ?solo=1&d=N renders one destination full-screen (for checking a shader)
 if (params.has('solo')) {
   const { uniforms } = await import('./shader.js');
@@ -162,6 +179,11 @@ renderer.setAnimationLoop(() => {
   controls.update(dt, t);
   physics.step(dt);
   cockpit.update(t, dt, getMouse());
-  renderer.render(scene, camera);
+  if (renderPipeline) {
+    bloomPass.strength.value = 0.4 + uniforms.pulse.value * 0.6;   // the glow flares with scans and teleports
+    renderPipeline.render();
+  } else {
+    renderer.render(scene, camera);
+  }
 });
 window.__ready = true;

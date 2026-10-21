@@ -14,11 +14,11 @@ An instruction panel is shown on screen when the page opens (and behind the **? 
 | --- | --- | --- | --- |
 | Look around | move the **mouse** | | the point of view in the window follows the mouse (the camera also sways a little) |
 | **Teleport** | click the big **red button** | `T` | flash + warp, then a new destination in the window. The picture frame always shows the next destination |
-| **Scan** | click the **rotary knob** | `S` | shifts the colours (random star colours, hue shift on the planets and nebulae) |
+| **Colours** | click the **rotary knob** | `S` | changes the colours (random star colours, hue shift on the planets and nebulae) |
 | **Zoom** | drag the **slider** | `D` | zooms the window in and out (the key cycles through three zoom levels) |
-| **New sky** | flip the **toggle switch** | `F` | a brand-new random sky / planet in the current destination |
+| **Randomise** | flip the **toggle switch** | `F` | a brand-new random sky / planet in the current destination |
 | **Roll** | drag the **joystick** sideways | `J` | rolls the view, springs back when you let go (the key gives a gentle kick) |
-| **Warp** | hold the **pull lever** | `K` | fly faster while you hold it |
+| **Warp speed** | drag the **slider** along its slot | `K` | the further towards you, the faster you fly (holding `K` pushes it to maximum) |
 | Loose objects | **drag** the mug, pen, dice or clipboard | | zero-gravity physics: grab them, throw them, watch them float. Teleporting shakes everything loose |
 
 The controls only change what is shown in the **window**. The **picture frame** is a calm preview of the next
@@ -28,6 +28,7 @@ destination: it does not react to the mouse or to any control. Every visit (and 
 - **Three.js `WebGPURenderer`** with TSL: every shader is a WGSL function wrapped with `wgslFn` and used as the `colorNode` of a `MeshBasicNodeMaterial`.
 - **7 Shadertoy shaders** ported to WGSL, all sharing one set of uniforms (time, mouse, roll, zoom, colour shift, seed, flash).
 - **Rapier** (`@dimforge/rapier3d-compat`) for the zero-gravity physics: colliders for the console, walls and objects, drag-and-throw with the mouse, and a soft "leash" that keeps floating objects inside the camera view.
+- **Bloom post-processing** with three's TSL `RenderPipeline` and `BloomNode` (`three/addons/tsl/display/BloomNode.js`): bright parts (LEDs, the window, the red button) glow, and the glow flares with scans and teleports. Add `?bloom=0` to the url to switch it off.
 - A cockpit built entirely in code (no model files): walls with a round window, a console with ~700 blinking LED buttons, gauges, a picture frame, a mug, a clipboard, a pen and dice.
 - Raycasting for the 3D controls (click, drag, hold) and the physics grabbing.
 
