@@ -20,7 +20,7 @@ const state = {
   sizeSeed: 0, sizeChance: 0,
   layoutSeed: rnd(0, 100),
   hue: 0, hueTarget: 0, zoom: 1, zoomTarget: 1, zoomStep: 0,
-  boost: 0, rollInput: 0,
+  boost: 0, rollInput: 0, warpLevel: 0,
   nextSeed: rnd(0, 100), previewPhase: rnd(0, 100),
 };
 const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
@@ -54,6 +54,8 @@ export const pressKey = (code) => press(code);
 export const releaseKey = (code) => release(code);
 export const setZoom = (v) => { state.zoomTarget = Math.min(1.8, Math.max(0.7, v)); };
 export const getZoomTarget = () => state.zoomTarget;
+export const setWarpLevel = (v) => { state.warpLevel = Math.min(1, Math.max(0, v)); };
+export const getWarpLevel = () => state.warpLevel;
 export const setRollInput = (v) => { state.rollInput = v; };
 export const flashPulse = (v = 1) => { state.pulse = Math.max(state.pulse, v); };
 // fly fast for a moment (during the teleport)
@@ -103,7 +105,7 @@ export const updateInput = (dt, time) => {
   state.pulse *= Math.exp(-dt * 2.0);
 
   state.boost = Math.max(0, state.boost - dt);
-  const targetSpeed = state.boost > 0 ? 9 : held.has('KeyK') ? 5 : 1;       // hold warp = fly faster
+  const targetSpeed = state.boost > 0 ? 9 : held.has('KeyK') ? 7 : 1 + state.warpLevel * 6;   // slider: 1x .. 7x       // hold warp = fly faster
   state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 3);
   state.phase += dt * state.speed;
 

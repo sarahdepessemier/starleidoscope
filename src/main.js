@@ -61,11 +61,11 @@ help.innerHTML = `
     <div><span>MOUSE</span> look around: the window follows your pointer</div>
     <div><span>RED BUTTON <i>T</i></span> teleport to the next destination (the frame shows it)</div>
     <div class="sub">Control panel, all of it only changes the window:</div>
-    <div><span>KNOB <i>S</i></span> scan: click to shift the colours</div>
-    <div><span>SLIDER <i>D</i></span> drag to zoom in and out</div>
-    <div><span>TOGGLE <i>F</i></span> flip for a brand-new sky</div>
-    <div><span>JOYSTICK <i>J</i></span> drag sideways to roll the view</div>
-    <div><span>LEVER <i>K</i></span> hold it pulled back to warp</div>
+    <div><span>KNOB <i>S</i></span> COLOURS: click to change the colours</div>
+    <div><span>SLIDER <i>D</i></span> ZOOM: drag to zoom in and out</div>
+    <div><span>TOGGLE <i>F</i></span> RANDOMISE: flip for a brand-new sky or planet</div>
+    <div><span>JOYSTICK <i>J</i></span> ROLL: drag sideways to roll the view</div>
+    <div><span>SLIDER <i>K</i></span> WARP SPEED: slide it towards you to fly faster (or hold K)</div>
     <div class="sub">Loose objects float in zero gravity:</div>
     <div><span>DRAG</span> grab and throw the mug, pen, dice or clipboard</div>
   </div>`;

@@ -1,12 +1,12 @@
 import * as THREE from 'three/webgpu';
-import { pressKey, releaseKey, setZoom, getZoomTarget, setRollInput, onKey } from './input.js';
+import { pressKey, releaseKey, setZoom, getZoomTarget, setRollInput, setWarpLevel, getWarpLevel, onKey } from './input.js';
 
 // The control panel on the console. Every control is a different kind of physical part:
-//   SCAN    rotary knob   (click: turns to the next position, colours change)       key S
-//   ZOOM    slider        (drag the handle: zoom in / out)                          key D
-//   NEW SKY toggle switch (flip it: a brand-new sky)                                key F
-//   ROLL    joystick      (drag: the view rolls, springs back when you let go)      key J
-//   WARP    pull lever    (hold it pulled back: fly faster)                         key K
+//   COLOURS     rotary knob   (click: turns one step, the colours change)               key S
+//   ZOOM        slider        (drag the handle: zoom in / out)                          key D
+//   RANDOMISE   toggle switch (flip it: a brand-new random sky or planet)               key F
+//   ROLL        joystick      (drag: the view rolls, springs back when you let go)      key J
+//   WARP SPEED  slider        (drag the handle along the slot: faster flight)           key K (hold)
 // They only change what the window shows, never the picture frame.
 const Y0 = 0.27;          // console surface (local y)
 const Z0 = 0.8;           // row of controls (local z)
@@ -20,7 +20,7 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
   consoleGroup.add(root);
 
   // dark strip behind the controls
-  const strip = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.02, 0.8), mat(0x2b2f38, { roughness: 0.7 }));
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.02, 0.8), mat(0x2b2f38, { roughness: 0.7 }));
   strip.position.set(0, Y0 - 0.01, Z0 + 0.02); root.add(strip);
 
   const controls = [];
@@ -31,7 +31,7 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
 
   // ---- 1. SCAN: rotary knob ---------------------------------------------------------------
   {
-    const x = -2.5;
+    const x = -2.22;
     const g = new THREE.Group(); g.position.set(x, Y0, Z0); root.add(g);
     const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 32), mat(0x15161b)); base.position.y = 0.015; g.add(base);
     for (let i = 0; i < 9; i++) {                       // tick marks
@@ -49,12 +49,12 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
     c.step = () => { c.target += 0.9; };
     c.update = (dt) => { c.angle += (c.target - c.angle) * Math.min(1, dt * 9); knob.rotation.y = c.angle; };
     controls.push(c);
-    label('SCAN [S]', x);
+    label('COLOURS [S]', x);
   }
 
   // ---- 2. ZOOM: slider -----------------------------------------------------------------------
   {
-    const x0 = -1.75, len = 1.0;
+    const x0 = -1.29, len = 0.9;
     const g = new THREE.Group(); g.position.set(x0, Y0, Z0); root.add(g);
     const track = new THREE.Mesh(new THREE.BoxGeometry(len + 0.1, 0.02, 0.045), mat(0x0d0e12)); track.position.set(len / 2, 0.01, 0); g.add(track);
     for (let i = 0; i <= 10; i++) {
@@ -78,7 +78,7 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
 
   // ---- 3. NEW SKY: toggle switch -----------------------------------------------------------
   {
-    const x = -0.45;
+    const x = 0.43;
     const g = new THREE.Group(); g.position.set(x, Y0, Z0); root.add(g);
     const plate = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.3), mat(0xb8bcc6, { metalness: 0.7, roughness: 0.3 })); plate.position.y = 0.015; g.add(plate);
     const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.05, 6), mat(0x8e93a0, { metalness: 0.8 })); nut.position.y = 0.05; g.add(nut);
@@ -96,12 +96,12 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
       ledOn.scale.setScalar(1 + c.flash * 1.5);
     };
     controls.push(c);
-    label('NEW SKY [F]', x);
+    label('RANDOMISE [F]', x);
   }
 
   // ---- 4. ROLL: joystick -------------------------------------------------------------------------
   {
-    const x = 0.7;
+    const x = 1.4;
     const g = new THREE.Group(); g.position.set(x, Y0, Z0); root.add(g);
     const base = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.05, 32), mat(0x15161b)); base.position.y = 0.025; g.add(base);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.012, 8, 32), mat(0xe8e8f0, { metalness: 0.6 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.052; g.add(ring);
@@ -123,31 +123,34 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
     label('ROLL [J]', x);
   }
 
-  // ---- 5. WARP: pull lever ---------------------------------------------------------------------------
+  // ---- 5. WARP SPEED: slider along a slot (drag towards you = faster) -------------------------------
   {
-    const x = 1.9;
-    const g = new THREE.Group(); g.position.set(x, Y0, Z0 - 0.02); root.add(g);
-    const slot = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.02, 0.5), mat(0x0d0e12)); slot.position.y = 0.01; g.add(slot);
-    for (let i = 0; i < 6; i++) {
-      const t = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.008, 0.01), new THREE.MeshBasicMaterial({ color: i > 3 ? 0xff6a5a : 0x8ab4ff }));
-      t.position.set(0, 0.006, -0.22 + i * 0.088); g.add(t);
+    const x = 2.34, zA = -0.24, zB = 0.24;            // slot runs from zA (slow) to zB (fast), along the console
+    const g = new THREE.Group(); g.position.set(x, Y0, Z0); root.add(g);
+    const slot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, zB - zA + 0.1), mat(0x0d0e12)); slot.position.set(0, 0.01, (zA + zB) / 2); g.add(slot);
+    for (let i = 0; i <= 8; i++) {                    // tick marks, the last ones are red (hot)
+      const t = new THREE.Mesh(new THREE.BoxGeometry(i % 4 === 0 ? 0.17 : 0.11, 0.008, 0.008), new THREE.MeshBasicMaterial({ color: i > 5 ? 0xff6a5a : 0x8ab4ff }));
+      t.position.set(0, 0.006, zA + (i / 8) * (zB - zA)); g.add(t);
     }
-    const pivot = new THREE.Group(); pivot.position.set(0, 0.02, -0.22); g.add(pivot);
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.028, 0.34, 12), mat(0xc9ccd4, { metalness: 0.8, roughness: 0.3 })); arm.position.y = 0.17; pivot.add(arm);
-    const grip = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.12, 6, 14), mat(0x2f6bff, { roughness: 0.45 })); grip.position.y = 0.38; grip.rotation.z = Math.PI / 2; pivot.add(grip);
-    const hit = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.7), hitMat()); hit.position.set(0, 0.2, 0.1); g.add(hit);
-    const c = { name: 'warp', hit, angle: 0, held: false, wobble: 0 };
+    const handle = new THREE.Group(); g.add(handle);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.026, 0.2, 12), mat(0xc9ccd4, { metalness: 0.8, roughness: 0.3 })); stem.position.y = 0.1; handle.add(stem);
+    const grip = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.1, 6, 14), mat(0x2f6bff, { roughness: 0.45 })); grip.position.y = 0.23; grip.rotation.z = Math.PI / 2; handle.add(grip);
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.45, zB - zA + 0.35), hitMat()); hit.position.set(0, 0.2, (zA + zB) / 2); g.add(hit);
+    const c = { name: 'warp', hit, g, zA, zB, p: 0, dragging: false, keyHeld: false };
     c.update = (dt) => {
-      const target = c.held ? 1.0 : 0.0;                       // pulled forward (towards you) while held
-      c.angle += (target - c.angle) * Math.min(1, dt * (c.held ? 10 : 6));
-      pivot.rotation.x = -c.angle * 0.95;
+      if (!c.dragging) {
+        const target = c.keyHeld ? 1 : getWarpLevel();       // the K key pushes it to the end while held
+        c.p += (target - c.p) * Math.min(1, dt * 8);
+      }
+      handle.position.z = zA + c.p * (zB - zA);
+      handle.rotation.x = (c.p - 0.5) * 0.25;                 // leans a little with the speed
     };
     controls.push(c);
-    label('WARP [K]', x);
+    label('WARP SPEED [K]', x);
   }
 
   // ---- keyboard presses animate the matching 3D control --------------------------------------
-  const byCode = { KeyS: 'scan', KeyF: 'sky', KeyJ: 'roll', KeyK: 'warp' };
+  const byCode = { KeyS: 'scan', KeyF: 'sky', KeyJ: 'roll' };
   onKey((code) => {
     const c = controls.find((x) => x.name === byCode[code]);
     if (!c) return;
@@ -155,8 +158,8 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
     else if (c.name === 'sky' && !c.flash) { c.target = -c.target; c.flash = 1; }
     else if (c.name === 'roll') c.wobble = 0.6;
   });
-  addEventListener('keydown', (e) => { if (e.code === 'KeyK') controls.find((x) => x.name === 'warp').held = true; });
-  addEventListener('keyup', (e) => { if (e.code === 'KeyK' && !active) controls.find((x) => x.name === 'warp').held = false; });
+  addEventListener('keydown', (e) => { if (e.code === 'KeyK') controls.find((x) => x.name === 'warp').keyHeld = true; });
+  addEventListener('keyup', (e) => { if (e.code === 'KeyK') controls.find((x) => x.name === 'warp').keyHeld = false; });
 
   // ---- pointer handling ---------------------------------------------------------------------------
   const ray = new THREE.Raycaster();
@@ -187,7 +190,7 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
     if (c.name === 'scan' || c.name === 'sky') c.click();
     if (c.name === 'zoom') { c.dragging = true; move(e); }
     if (c.name === 'roll') { c.dragging = true; move(e); }
-    if (c.name === 'warp') { c.held = true; pressKey('KeyK'); }
+    if (c.name === 'warp') { c.dragging = true; move(e); }
     return true;
   };
   const move = (e) => {
@@ -196,6 +199,13 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
     if (active.name === 'zoom') {
       const p = localPoint(Y0 + 0.05);
       if (p) { const t = Math.min(1, Math.max(0, (p.x - active.x0) / active.len)); active.p = t; setZoom(active.zoomOf(t)); }
+    } else if (active.name === 'warp') {
+      const p = localPoint(Y0 + 0.05);
+      if (p) {
+        const z = p.z - active.g.position.z;
+        active.p = Math.min(1, Math.max(0, (z - active.zA) / (active.zB - active.zA)));
+        setWarpLevel(active.p);
+      }
     } else if (active.name === 'roll') {
       const p = localPoint(Y0 + 0.25);
       if (p) {
@@ -210,7 +220,7 @@ export const createControls = ({ consoleGroup, camera, makeLabel }) => {
     if (!active) return;
     if (active.name === 'zoom') active.dragging = false;
     if (active.name === 'roll') { active.dragging = false; setRollInput(0); }
-    if (active.name === 'warp') { active.held = false; releaseKey('KeyK'); }
+    if (active.name === 'warp') active.dragging = false;
     active = null;
   };
 
