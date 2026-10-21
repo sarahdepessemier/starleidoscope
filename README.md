@@ -24,28 +24,18 @@ An instruction panel is shown on screen when the page opens (and behind the **? 
 The controls only change what is shown in the **window**. The **picture frame** is a calm preview of the next
 destination: it does not react to the mouse or to any control. Every visit (and every teleport) shows a different, random sky.
 
-## Techniques
-- **Three.js `WebGPURenderer`** with TSL: every shader is a WGSL function wrapped with `wgslFn` and used as the `colorNode` of a `MeshBasicNodeMaterial`.
-- **7 Shadertoy shaders** ported to WGSL, all sharing one set of uniforms (time, mouse, roll, zoom, colour shift, seed, flash).
-- **Rapier** (`@dimforge/rapier3d-compat`) for the zero-gravity physics: colliders for the console, walls and objects, drag-and-throw with the mouse, and a soft "leash" that keeps floating objects inside the camera view.
-- **Bloom post-processing** with three's TSL `RenderPipeline` and `BloomNode` (`three/addons/tsl/display/BloomNode.js`): bright parts (LEDs, the window, the red button) glow, and the glow flares with scans and teleports. Add `?bloom=0` to the url to switch it off.
-- A cockpit built entirely in code (no model files): walls with a round window, a console with ~700 blinking LED buttons, gauges, a picture frame, a mug, a clipboard, a pen and dice.
-- Raycasting for the 3D controls (click, drag, hold) and the physics grabbing.
-
 ## Shadertoy shaders used
-| Destination | Shader | Author | Licence |
-| --- | --- | --- | --- |
-| Kaleidoscope Rift | https://www.shadertoy.com/view/ftt3R7 | DanielXMoore | no licence stated in the code (Shadertoy default: CC BY-NC-SA 3.0) |
-| Aqua | https://www.shadertoy.com/view/Ds3XRl (Procedural Blue Planet) | Julien Sulpis | CC BY-NC-SA 3.0 |
-| Rubra | https://www.shadertoy.com/view/msdXzl (Procedural Red Planet) | Julien Sulpis | CC BY-NC-SA 3.0 |
-| Star Nest | https://www.shadertoy.com/view/XlfGRj | Kali (Pablo Roman Andrioli) | MIT |
-| The Vortex | https://www.shadertoy.com/view/XdBBDz | public_int_i (tunnel code by Ethan Alexander Shulman, 2017) | no licence stated in the code (Shadertoy default: CC BY-NC-SA 3.0) |
-| Pegasus Galaxy | https://www.shadertoy.com/view/lty3Rt | Frank Hugenroth (frankenburgh), 2015 | no licence stated in the code (Shadertoy default: CC BY-NC-SA 3.0) |
-| Supernova Remnant | https://www.shadertoy.com/view/MdKXzc | Duke | CC BY-NC-SA 3.0 |
+| Destination | Shader | Author |
+| --- | --- | --- |
+| Kaleidoscope Rift | https://www.shadertoy.com/view/ftt3R7 | DanielXMoore |
+| Aqua | https://www.shadertoy.com/view/Ds3XRl (Procedural Blue Planet) | Julien Sulpis |
+| Rubra | https://www.shadertoy.com/view/msdXzl (Procedural Red Planet) | Julien Sulpis |
+| Star Nest | https://www.shadertoy.com/view/XlfGRj | Kali (Pablo Roman Andrioli) |
+| The Vortex | https://www.shadertoy.com/view/XdBBDz | public_int_i (tunnel code by Ethan Alexander Shulman, 2017) |
+| Pegasus Galaxy | https://www.shadertoy.com/view/lty3Rt | Frank Hugenroth (frankenburgh), 2015 |
+| Supernova Remnant | https://www.shadertoy.com/view/MdKXzc | Duke |
 
-Licences: where the author wrote one in the shader's header it is listed above. Shadertoy shaders without a
-licence line fall under Shadertoy's default licence (CC BY-NC-SA 3.0): credit the author, non-commercial use, share-alike.
-This is a non-commercial school project, and every shader is credited in the table above and in the header of its `.wgsl` file.
+Every shader is credited above and in the header of its `.wgsl` file. 
 
 ## Shaders I edited
 All shaders were ported from GLSL to WGSL (`src/shaders/`), and all of them have the same additions: a mouse-controlled
@@ -65,5 +55,4 @@ point of view, roll, zoom, colour shift, a flash pulse and a seed (for a new ran
 ```
 npm install
 npm run dev
-npm run build
 ```
